@@ -102,6 +102,13 @@
             clip-path: polygon(50% 100%, 15% 0, 85% 0); /* Triangle shape */
             transform-origin: bottom center;
         }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-[100dvh] w-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
@@ -129,10 +136,29 @@
             📋 Plant Walk
         </button>
 
-        <!-- Locate Me Button -->
-        <button id="locate-btn" onclick="startTracking()" class="absolute bottom-8 right-4 z-[1000] bg-white w-14 h-14 rounded-full shadow-lg border border-gray-200 text-2xl hover:bg-gray-50 flex items-center justify-center focus:outline-none transition transform hover:scale-105" style="margin-bottom: env(safe-area-inset-bottom, 10px);" title="Show My Location">
-            🧭
-        </button>
+        <!-- Locate Me Container -->
+        <div class="absolute bottom-8 right-4 z-[1000] flex items-center gap-3" style="margin-bottom: env(safe-area-inset-bottom, 10px);">
+            
+            <!-- Welcome Tooltip Bubble -->
+            <div id="locate-tooltip" class="relative bg-[#ba2026] rounded-2xl shadow-xl p-3 md:p-4 text-center max-w-[200px] md:max-w-[240px] float-anim cursor-pointer" onclick="startTracking()">
+                <!-- Right-pointing triangle -->
+                <div class="absolute top-1/2 -right-2 transform -translate-y-1/2 w-4 h-4 bg-[#ba2026] rotate-45"></div>
+                
+                <div class="relative z-10">
+                    <p class="font-extrabold text-white text-lg md:text-xl mb-1 tracking-wide">START HERE:</p>
+                    <p class="text-red-50 font-medium text-sm md:text-base leading-tight">Click to locate yourself and start your plant walk!</p>
+                </div>
+            </div>
+
+            <!-- Locate Me Button -->
+            <button id="locate-btn" onclick="startTracking()" class="bg-white w-16 h-16 md:w-20 md:h-20 rounded-full shadow-xl border border-gray-200 flex items-center justify-center focus:outline-none transition transform hover:scale-105 shrink-0" title="Show My Location">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="md:w-12 md:h-12">
+                    <circle cx="12" cy="12" r="5" stroke="#2563eb" stroke-width="2.5"/>
+                    <circle cx="12" cy="12" r="2" fill="#2563eb"/>
+                    <path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
     </main>
 
     <script>
@@ -383,12 +409,13 @@
                 markers.push({ id: stop.id, layer: marker });
             });
 
-            // Automatically zoom and center the map to fit the entire path
+            // Automatically zoom and center the map to fit all 26 pins
             // Delay slightly to ensure mobile browsers have finished rendering the container size
             setTimeout(() => {
                 map.invalidateSize();
-                map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
-            }, 150);
+                const allPinsBounds = L.latLngBounds(stopsData.map(stop => [stop.lat, stop.lng]));
+                map.fitBounds(allPinsBounds, { padding: [50, 50] }); // 50px padding prevents edge pins from being cut off
+            }, 250);
         }
 
         // --- 4. SIDEBAR LOGIC ---
@@ -467,10 +494,19 @@
         let watchId = null;
         let userMarker = null;
 
+        const targetSvg = `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="md:w-12 md:h-12"><circle cx="12" cy="12" r="5" stroke="#2563eb" stroke-width="2.5"/><circle cx="12" cy="12" r="2" fill="#2563eb"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+        const spinnerSvg = `<svg class="animate-spin text-[#2563eb] w-8 h-8 md:w-10 md:h-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+
         function startTracking() {
             if (!navigator.geolocation) {
                 alert("Geolocation is not supported by your browser.");
                 return;
+            }
+
+            // Hide the tooltip bubble once they start tracking
+            const tooltip = document.getElementById('locate-tooltip');
+            if (tooltip) {
+                tooltip.classList.add('hidden');
             }
 
             // Handle iOS 13+ strict permissions for device orientation
@@ -494,8 +530,7 @@
             const btn = document.getElementById('locate-btn');
 
             if (!watchId) {
-                btn.innerHTML = '🔄'; // Loading state
-                btn.classList.add('animate-pulse');
+                btn.innerHTML = spinnerSvg; // Loading state
 
                 watchId = navigator.geolocation.watchPosition(
                     (position) => {
@@ -519,9 +554,8 @@
                             map.flyTo([lat, lng], 19, { duration: 1 });
                             
                             // Update button to active state
-                            btn.innerHTML = '📍';
-                            btn.classList.remove('animate-pulse');
-                            btn.classList.add('bg-blue-50', 'border-blue-400', 'text-blue-600');
+                            btn.innerHTML = targetSvg;
+                            btn.classList.add('bg-blue-50', 'border-blue-400');
                         } else {
                             // Update existing marker position
                             userMarker.setLatLng([lat, lng]);
@@ -529,8 +563,7 @@
                     },
                     (error) => {
                         console.error("Error watching position", error);
-                        btn.innerHTML = '🧭';
-                        btn.classList.remove('animate-pulse');
+                        btn.innerHTML = targetSvg;
                         alert("Unable to retrieve your location. Please ensure location services are enabled on your phone.");
                         watchId = null;
                     },
