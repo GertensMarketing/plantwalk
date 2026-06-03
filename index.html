@@ -165,10 +165,350 @@
     </main>
 
     <script>
+        // --- STREAMING_CHUNK:Initializing state and data arrays... ---
         // --- 1. CONFIGURATION & STATE ---
         const centerCoords = [44.872334, -93.051271];
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQE7paglHRw9zBENw0hF07q4DHjsRriyWeZ-g2KXrmTOlDCIGtOTQIprO2DWwoZkty1UK-DmBPysDi1/pub?gid=0&single=true&output=csv';
         
+        let customPathData = [
+          {
+            "lat": 44.871385,
+            "lng": -93.052053
+          },
+          {
+            "lat": 44.871415,
+            "lng": -93.052054
+          },
+          {
+            "lat": 44.871414,
+            "lng": -93.052104
+          },
+          {
+            "lat": 44.871436,
+            "lng": -93.052119
+          },
+          {
+            "lat": 44.87146,
+            "lng": -93.052118
+          },
+          {
+            "lat": 44.871482,
+            "lng": -93.052119
+          },
+          {
+            "lat": 44.871499,
+            "lng": -93.052055
+          },
+          {
+            "lat": 44.871501,
+            "lng": -93.05197
+          },
+          {
+            "lat": 44.871554,
+            "lng": -93.051971
+          },
+          {
+            "lat": 44.871612,
+            "lng": -93.051973
+          },
+          {
+            "lat": 44.871752,
+            "lng": -93.05197
+          },
+          {
+            "lat": 44.871752,
+            "lng": -93.051918
+          },
+          {
+            "lat": 44.87179,
+            "lng": -93.051917
+          },
+          {
+            "lat": 44.871789,
+            "lng": -93.052059
+          },
+          {
+            "lat": 44.871833,
+            "lng": -93.052057
+          },
+          {
+            "lat": 44.871858,
+            "lng": -93.052086
+          },
+          {
+            "lat": 44.871858,
+            "lng": -93.052015
+          },
+          {
+            "lat": 44.871885,
+            "lng": -93.05196
+          },
+          {
+            "lat": 44.871885,
+            "lng": -93.051798
+          },
+          {
+            "lat": 44.871915,
+            "lng": -93.051799
+          },
+          {
+            "lat": 44.871915,
+            "lng": -93.051817
+          },
+          {
+            "lat": 44.871964,
+            "lng": -93.051816
+          },
+          {
+            "lat": 44.872013,
+            "lng": -93.051819
+          },
+          {
+            "lat": 44.872108,
+            "lng": -93.051817
+          },
+          {
+            "lat": 44.87211,
+            "lng": -93.051842
+          },
+          {
+            "lat": 44.872112,
+            "lng": -93.051817
+          },
+          {
+            "lat": 44.872198,
+            "lng": -93.051819
+          },
+          {
+            "lat": 44.872198,
+            "lng": -93.051801
+          },
+          {
+            "lat": 44.872205,
+            "lng": -93.051819
+          },
+          {
+            "lat": 44.872244,
+            "lng": -93.05182
+          },
+          {
+            "lat": 44.872281,
+            "lng": -93.051804
+          },
+          {
+            "lat": 44.872317,
+            "lng": -93.051792
+          },
+          {
+            "lat": 44.872331,
+            "lng": -93.051754
+          },
+          {
+            "lat": 44.872336,
+            "lng": -93.051712
+          },
+          {
+            "lat": 44.872365,
+            "lng": -93.051699
+          },
+          {
+            "lat": 44.872332,
+            "lng": -93.051719
+          },
+          {
+            "lat": 44.872322,
+            "lng": -93.051745
+          },
+          {
+            "lat": 44.872271,
+            "lng": -93.051741
+          },
+          {
+            "lat": 44.872274,
+            "lng": -93.051699
+          },
+          {
+            "lat": 44.872264,
+            "lng": -93.051766
+          },
+          {
+            "lat": 44.872251,
+            "lng": -93.051745
+          },
+          {
+            "lat": 44.872208,
+            "lng": -93.051742
+          },
+          {
+            "lat": 44.872139,
+            "lng": -93.051739
+          },
+          {
+            "lat": 44.872061,
+            "lng": -93.051734
+          },
+          {
+            "lat": 44.872062,
+            "lng": -93.051578
+          },
+          {
+            "lat": 44.872043,
+            "lng": -93.051576
+          },
+          {
+            "lat": 44.872063,
+            "lng": -93.051569
+          },
+          {
+            "lat": 44.872063,
+            "lng": -93.05154
+          },
+          {
+            "lat": 44.872156,
+            "lng": -93.051542
+          },
+          {
+            "lat": 44.872158,
+            "lng": -93.051359
+          },
+          {
+            "lat": 44.872131,
+            "lng": -93.051359
+          },
+          {
+            "lat": 44.872131,
+            "lng": -93.051301
+          },
+          {
+            "lat": 44.872131,
+            "lng": -93.051274
+          },
+          {
+            "lat": 44.872037,
+            "lng": -93.051275
+          },
+          {
+            "lat": 44.872038,
+            "lng": -93.051301
+          },
+          {
+            "lat": 44.87203,
+            "lng": -93.051274
+          },
+          {
+            "lat": 44.871973,
+            "lng": -93.05127
+          },
+          {
+            "lat": 44.871975,
+            "lng": -93.051538
+          },
+          {
+            "lat": 44.87191,
+            "lng": -93.051542
+          },
+          {
+            "lat": 44.871911,
+            "lng": -93.05158
+          },
+          {
+            "lat": 44.871859,
+            "lng": -93.05158
+          },
+          {
+            "lat": 44.871859,
+            "lng": -93.051539
+          },
+          {
+            "lat": 44.871881,
+            "lng": -93.051538
+          },
+          {
+            "lat": 44.871882,
+            "lng": -93.051498
+          },
+          {
+            "lat": 44.871904,
+            "lng": -93.051498
+          },
+          {
+            "lat": 44.871882,
+            "lng": -93.051495
+          },
+          {
+            "lat": 44.871883,
+            "lng": -93.051433
+          },
+          {
+            "lat": 44.871883,
+            "lng": -93.051373
+          },
+          {
+            "lat": 44.871908,
+            "lng": -93.051372
+          },
+          {
+            "lat": 44.871883,
+            "lng": -93.051372
+          },
+          {
+            "lat": 44.871883,
+            "lng": -93.051247
+          },
+          {
+            "lat": 44.871793,
+            "lng": -93.051245
+          },
+          {
+            "lat": 44.871792,
+            "lng": -93.051496
+          },
+          {
+            "lat": 44.871764,
+            "lng": -93.051497
+          },
+          {
+            "lat": 44.871762,
+            "lng": -93.051538
+          },
+          {
+            "lat": 44.871647,
+            "lng": -93.051533
+          },
+          {
+            "lat": 44.871647,
+            "lng": -93.051593
+          },
+          {
+            "lat": 44.871647,
+            "lng": -93.051613
+          },
+          {
+            "lat": 44.871564,
+            "lng": -93.051612
+          },
+          {
+            "lat": 44.871512,
+            "lng": -93.051702
+          },
+          {
+            "lat": 44.871535,
+            "lng": -93.051706
+          },
+          {
+            "lat": 44.871532,
+            "lng": -93.051816
+          },
+          {
+            "lat": 44.871383,
+            "lng": -93.051813
+          },
+          {
+            "lat": 44.871381,
+            "lng": -93.051783
+          }
+        ];
+
         // Default coordinates & fallback data
         let stopsData = [
           {
@@ -177,86 +517,86 @@
             "lat": 44.871385,
             "lng": -93.052053,
             "desc": "Perennial",
-            "link": ""
+            "link": "https://www.gertens.com/plant-catalog/perennials?tree_common_family=Allium"
           },
           {
             "id": 2,
-            "name": "Agastache",
+            "name": "Agastache \"Anise Hyssop\"",
             "lat": 44.871414,
             "lng": -93.052104,
-            "desc": "Perennial: Anise Hyssop",
-            "link": ""
+            "desc": "Perennial",
+            "link": "https://www.gertens.com/blue-fortune-anise-hyssop"
           },
           {
             "id": 3,
-            "name": "Baptisia",
+            "name": "Baptisia \"False Indigo\"",
             "lat": 44.871499,
             "lng": -93.052055,
-            "desc": "Perennial: False Indigo",
-            "link": ""
+            "desc": "Perennial",
+            "link": "https://www.gertens.com/plant-catalog/perennials?tree_common_family=False+Indigo"
           },
           {
             "id": 4,
-            "name": "Gaillardia",
+            "name": "Gaillardia \"Blanket Flower\"",
             "lat": 44.871752,
             "lng": -93.051918,
-            "desc": "Perennial: Blanket Flower",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 5,
-            "name": "Heuchera",
+            "name": "Heuchera \"Coral Bells\"",
             "lat": 44.871789,
             "lng": -93.052059,
-            "desc": "Perennial: Coral Bells",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 6,
-            "name": "Ligularia",
+            "name": "Ligularia \"Ragwort\"",
             "lat": 44.871858,
             "lng": -93.052086,
-            "desc": "Perennial: Ragwort",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 7,
-            "name": "Pulmonaria",
+            "name": "Pulmonaria \"Jacobs Ladder\"",
             "lat": 44.871858,
             "lng": -93.052015,
-            "desc": "Perennial: Jacobs Ladder",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 8,
-            "name": "Penstemon",
+            "name": "Penstemon \"Beardtonge\"",
             "lat": 44.871915,
             "lng": -93.051799,
-            "desc": "Perennial: Beardtongue",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 9,
-            "name": "Salvia",
+            "name": "Salvia \"Sage\"",
             "lat": 44.87211,
             "lng": -93.051842,
-            "desc": "Perennial: Sage",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 10,
-            "name": "Veronica",
+            "name": "Veronica \"Speedwell\"",
             "lat": 44.872198,
             "lng": -93.051801,
-            "desc": "Perennial: Speedwell",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 11,
-            "name": "Yucca",
+            "name": "Yucca \"Desert Candle\"",
             "lat": 44.872281,
             "lng": -93.051804,
-            "desc": "Perennial: Desert Candle",
+            "desc": "Perennial",
             "link": ""
           },
           {
@@ -264,55 +604,55 @@
             "name": "Weigela",
             "lat": 44.872365,
             "lng": -93.051699,
-            "desc": "Shrub",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 13,
-            "name": "Syringa",
+            "name": "Syringa \"Lilac\"",
             "lat": 44.872274,
             "lng": -93.051699,
-            "desc": "Shrub: Lilac",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 14,
-            "name": "Chionanthus",
+            "name": "Chionanthus \"Fringetree\"",
             "lat": 44.872264,
             "lng": -93.051766,
-            "desc": "Shrub: Fringetree",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 15,
-            "name": "Salix",
+            "name": "Salix \"Willow\"",
             "lat": 44.872043,
             "lng": -93.051576,
-            "desc": "Shrub: Willow",
+            "desc": "Perennial",
             "link": ""
           },
           {
             "id": 16,
-            "name": "Chamaecyparis",
+            "name": "Chamaecyparis \"Mop Cypress\"",
             "lat": 44.872131,
             "lng": -93.051359,
-            "desc": "Evergreen: Mop Cypress",
+            "desc": "Evergreen",
             "link": ""
           },
           {
             "id": 17,
-            "name": "Thuja",
+            "name": "Thuja \"Primo Arborvitae\"",
             "lat": 44.872131,
             "lng": -93.051301,
-            "desc": "Evergreen: Primo Arborvitae",
+            "desc": "Evergreen",
             "link": ""
           },
           {
             "id": 18,
-            "name": "Taxus",
+            "name": "Taxus \"Upright Yew\"",
             "lat": 44.872038,
             "lng": -93.051301,
-            "desc": "Evergreen: Upright Yew",
+            "desc": "Evergreen",
             "link": ""
           },
           {
@@ -325,42 +665,42 @@
           },
           {
             "id": 20,
-            "name": "Cotinus",
+            "name": "Cotinus \"Smokebush\"",
             "lat": 44.871859,
             "lng": -93.05158,
-            "desc": "Shrub: Smokebush",
+            "desc": "Shrub",
             "link": ""
           },
           {
             "id": 21,
-            "name": "Hypericum",
+            "name": "Hypericum \"St John's Wort\"",
             "lat": 44.871904,
             "lng": -93.051498,
-            "desc": "Shrub: St John's Wort",
+            "desc": "Shrub",
             "link": ""
           },
           {
             "id": 22,
-            "name": "Philadelphus",
+            "name": "Philadelphus \"Mockorange\"",
             "lat": 44.871908,
             "lng": -93.051372,
-            "desc": "Shrub: Mockorange",
+            "desc": "Shrub",
             "link": ""
           },
           {
             "id": 23,
-            "name": "Clethra",
+            "name": "Clethra \"Summersweet\"",
             "lat": 44.871764,
             "lng": -93.051497,
-            "desc": "Shrub: Summersweet",
+            "desc": "Shrub",
             "link": ""
           },
           {
             "id": 24,
-            "name": "Hydrangea",
+            "name": "Hydrangea \"Oakleaf Hydrangea\"",
             "lat": 44.871647,
             "lng": -93.051593,
-            "desc": "Shrub: Oakleaf Hydrangea",
+            "desc": "Shrub",
             "link": ""
           },
           {
@@ -381,6 +721,7 @@
           }
         ];
 
+        // --- STREAMING_CHUNK:Setting up Leaflet Map... ---
         // --- 2. LEAFLET MAP SETUP ---
         // Setting zoomSnap to 0 allows fractional zooming (e.g. 17.5) to perfectly fit the screen
         const map = L.map('map', { zoomSnap: 0, maxZoom: 24 }).setView([44.871873, -93.051702], 18);
@@ -395,11 +736,17 @@
         let markers = [];
         let polyline;
 
-        // --- 3. RENDERING & DRAG LOGIC ---
+        // --- STREAMING_CHUNK:Rendering map elements... ---
+        // --- 3. RENDERING LOGIC ---
 
         function renderMapElements() {
-            // 1. Draw initial Polyline (Path)
-            const pathCoordinates = stopsData.map(stop => [stop.lat, stop.lng]);
+            // Clear existing
+            markers.forEach(m => map.removeLayer(m.layer));
+            markers = [];
+            if(polyline) map.removeLayer(polyline);
+
+            // 1. Draw Polyline (Path)
+            const pathCoordinates = customPathData.map(p => [p.lat, p.lng]);
             
             polyline = L.polyline(pathCoordinates, {
                 color: '#eab308', // Tailwind Yellow-500
@@ -409,7 +756,7 @@
                 lineJoin: 'round'
             }).addTo(map);
 
-            // 2. Generate Draggable Pins
+            // 2. Generate Pins
             stopsData.forEach((stop, index) => {
                 const customIcon = L.divIcon({
                     className: 'custom-div-icon',
@@ -443,7 +790,7 @@
                     learnMoreBtn = `<a href="${stop.link}" target="_blank" class="block w-full text-center bg-[#ba2026] !text-white py-2 rounded-lg text-sm font-bold hover:bg-[#9a1b1f] transition mt-3 shadow-sm">LEARN MORE</a>`;
                 }
 
-                // Add Popup with autoPan disabled so our custom camera logic works perfectly
+                // Normal app popup
                 marker.bindPopup(`
                     <div class="text-center p-1 min-w-[200px] md:min-w-[240px]">
                         <h3 class="font-bold text-lg text-[#ba2026] leading-tight">Stop ${stop.id}: ${stop.name}</h3>
@@ -457,18 +804,19 @@
                 marker.on('click', () => {
                     focusStop(stop.id);
                 });
+                
                 markers.push({ id: stop.id, layer: marker });
             });
 
             // Automatically zoom and center the map to fit all 26 pins
-            // Delay slightly to ensure mobile browsers have finished rendering the container size
             setTimeout(() => {
                 map.invalidateSize();
                 const allPinsBounds = L.latLngBounds(stopsData.map(stop => [stop.lat, stop.lng]));
-                map.fitBounds(allPinsBounds, { padding: [50, 50] }); // 50px padding prevents edge pins from being cut off
+                map.fitBounds(allPinsBounds, { padding: [50, 50] });
             }, 250);
         }
 
+        // --- STREAMING_CHUNK:Building the sidebar... ---
         // --- 4. SIDEBAR LOGIC ---
 
         function buildSidebar() {
@@ -536,6 +884,17 @@
             }
         }
 
+        function openSidebar() {
+            document.getElementById('sidebar').classList.remove('translate-y-full');
+            document.getElementById('show-key-btn').classList.add('hidden');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('translate-y-full');
+            document.getElementById('show-key-btn').classList.remove('hidden');
+        }
+
+        // --- STREAMING_CHUNK:Loading CSV data and initializing... ---
         // --- 5. INITIALIZE APPLICATION WITH CSV ---
         function initApp() {
             // Attempt to load live data from CSV
@@ -574,6 +933,7 @@
         // Start the application
         initApp();
 
+        // --- STREAMING_CHUNK:Configuring geolocation and tracking... ---
         // --- 6. GEOLOCATION & ORIENTATION LOGIC ---
         let watchId = null;
         let userMarker = null;
