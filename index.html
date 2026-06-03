@@ -1,1 +1,540 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gertens Nursery Plant Walk</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS & JS for the interactive map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* Custom styles for our numbered map pins */
+        .stop-marker {
+            background-color: #16a34a; /* Green-600 */
+            color: white;
+            border-radius: 50%;
+            border: 2px solid white;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .stop-marker:hover, .stop-marker.active {
+            background-color: #15803d; /* Green-700 */
+            transform: scale(1.2);
+            z-index: 1000 !important;
+        }
+        
+        /* Ensure the map takes up necessary space */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Custom scrollbar for the sidebar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        /* User Location Marker & Flashlight Styles */
+        .custom-user-icon {
+            overflow: visible !important;
+        }
+        .blue-dot {
+            position: absolute;
+            width: 18px; 
+            height: 18px;
+            background: #2563eb; /* blue-600 */
+            border: 3px solid white;
+            border-radius: 50%;
+            top: 1px; left: 1px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+        .blue-dot::after {
+            content: "";
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            background-color: rgba(37, 99, 235, 0.5);
+            z-index: -1;
+            animation: pulsate 2s ease-out infinite;
+        }
+        @keyframes pulsate {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .flashlight-wrapper {
+            position: absolute;
+            width: 100px; 
+            height: 100px;
+            top: -40px; left: -40px; /* Center over the 20x20 icon */
+            pointer-events: none;
+            z-index: 5;
+            transition: transform 0.1s ease-out;
+        }
+        .flashlight-cone {
+            width: 100%; 
+            height: 50%; /* Top half of the wrapper */
+            background: radial-gradient(circle at bottom center, rgba(37,99,235,0.45) 0%, rgba(37,99,235,0) 80%);
+            clip-path: polygon(50% 100%, 15% 0, 85% 0); /* Triangle shape */
+            transform-origin: bottom center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
+
+    <!-- Sidebar: Stop List -->
+    <aside class="w-full md:w-80 bg-white shadow-lg flex flex-col h-[40vh] md:h-screen z-10 relative">
+        <div class="p-5 bg-green-700 text-white shadow-md">
+            <h1 class="text-2xl font-bold">Nursery Plant Walk</h1>
+            <p class="text-sm text-green-100 mt-1">Interactive 26-Stop Guide</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-3" id="stop-list">
+            <!-- JavaScript will populate the stops here -->
+        </div>
+    </aside>
+
+    <!-- Main Content: Map & Export Tools -->
+    <main class="flex-1 relative h-[60vh] md:h-screen">
+        <div id="map"></div>
+
+        <!-- Locate Me Button -->
+        <button id="locate-btn" onclick="startTracking()" class="absolute bottom-6 right-4 z-[400] bg-white w-14 h-14 rounded-full shadow-lg border border-gray-200 text-2xl hover:bg-gray-50 flex items-center justify-center focus:outline-none transition transform hover:scale-105" title="Show My Location">
+            🧭
+        </button>
+    </main>
+
+    <script>
+        // --- 1. CONFIGURATION & STATE ---
+        const centerCoords = [44.872334, -93.051271];
+        
+        // Final exported coordinates for all 26 stops
+        const stopsData = [
+          {
+            "id": 1,
+            "name": "Allium",
+            "lat": 44.871385,
+            "lng": -93.052053,
+            "desc": "Perennial"
+          },
+          {
+            "id": 2,
+            "name": "Agastache",
+            "lat": 44.871414,
+            "lng": -93.052104,
+            "desc": "Perennial: Anise Hyssop"
+          },
+          {
+            "id": 3,
+            "name": "Baptisia",
+            "lat": 44.871499,
+            "lng": -93.052055,
+            "desc": "Perennial: False Indigo"
+          },
+          {
+            "id": 4,
+            "name": "Gaillardia",
+            "lat": 44.871752,
+            "lng": -93.051918,
+            "desc": "Perennial: Blanket Flower"
+          },
+          {
+            "id": 5,
+            "name": "Heuchera",
+            "lat": 44.871789,
+            "lng": -93.052059,
+            "desc": "Perennial: Coral Bells"
+          },
+          {
+            "id": 6,
+            "name": "Ligularia",
+            "lat": 44.871858,
+            "lng": -93.052086,
+            "desc": "Perennial: Ragwort"
+          },
+          {
+            "id": 7,
+            "name": "Pulmonaria",
+            "lat": 44.871858,
+            "lng": -93.052015,
+            "desc": "Perennial: Jacobs Ladder"
+          },
+          {
+            "id": 8,
+            "name": "Penstemon",
+            "lat": 44.871915,
+            "lng": -93.051799,
+            "desc": "Perennial: Beardtongue"
+          },
+          {
+            "id": 9,
+            "name": "Salvia",
+            "lat": 44.87211,
+            "lng": -93.051842,
+            "desc": "Perennial: Sage"
+          },
+          {
+            "id": 10,
+            "name": "Veronica",
+            "lat": 44.872198,
+            "lng": -93.051801,
+            "desc": "Perennial: Speedwell"
+          },
+          {
+            "id": 11,
+            "name": "Yucca",
+            "lat": 44.872281,
+            "lng": -93.051804,
+            "desc": "Perennial: Desert Candle"
+          },
+          {
+            "id": 12,
+            "name": "Weigela",
+            "lat": 44.872365,
+            "lng": -93.051699,
+            "desc": "Shrub"
+          },
+          {
+            "id": 13,
+            "name": "Syringa",
+            "lat": 44.872274,
+            "lng": -93.051699,
+            "desc": "Shrub: Lilac"
+          },
+          {
+            "id": 14,
+            "name": "Chionanthus",
+            "lat": 44.872264,
+            "lng": -93.051766,
+            "desc": "Shrub: Fringetree"
+          },
+          {
+            "id": 15,
+            "name": "Salix",
+            "lat": 44.872043,
+            "lng": -93.051576,
+            "desc": "Shrub: Willow"
+          },
+          {
+            "id": 16,
+            "name": "Chamaecyparis",
+            "lat": 44.872131,
+            "lng": -93.051359,
+            "desc": "Evergreen: Mop Cypress"
+          },
+          {
+            "id": 17,
+            "name": "Thuja",
+            "lat": 44.872131,
+            "lng": -93.051301,
+            "desc": "Evergreen: Primo Arborvitae"
+          },
+          {
+            "id": 18,
+            "name": "Taxus",
+            "lat": 44.872038,
+            "lng": -93.051301,
+            "desc": "Evergreen: Upright Yew"
+          },
+          {
+            "id": 19,
+            "name": "Fothergilla",
+            "lat": 44.871911,
+            "lng": -93.05158,
+            "desc": "Shrub"
+          },
+          {
+            "id": 20,
+            "name": "Cotinus",
+            "lat": 44.871859,
+            "lng": -93.05158,
+            "desc": "Shrub: Smokebush"
+          },
+          {
+            "id": 21,
+            "name": "Hypericum",
+            "lat": 44.871904,
+            "lng": -93.051498,
+            "desc": "Shrub: St John's Wort"
+          },
+          {
+            "id": 22,
+            "name": "Philadelphus",
+            "lat": 44.871908,
+            "lng": -93.051372,
+            "desc": "Shrub: Mockorange"
+          },
+          {
+            "id": 23,
+            "name": "Clethra",
+            "lat": 44.871764,
+            "lng": -93.051497,
+            "desc": "Shrub: Summersweet"
+          },
+          {
+            "id": 24,
+            "name": "Hydrangea",
+            "lat": 44.871647,
+            "lng": -93.051593,
+            "desc": "Shrub: Oakleaf Hydrangea"
+          },
+          {
+            "id": 25,
+            "name": "Strawberry",
+            "lat": 44.871512,
+            "lng": -93.051702,
+            "desc": "Small Fruit"
+          },
+          {
+            "id": 26,
+            "name": "Rhubarb",
+            "lat": 44.871381,
+            "lng": -93.051783,
+            "desc": "Small Fruit"
+          }
+        ];
+
+        // --- 2. LEAFLET MAP SETUP ---
+        const map = L.map('map').setView(centerCoords, 18);
+
+        // Add Satellite Base Layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri',
+            maxZoom: 20
+        }).addTo(map);
+
+        let markers = [];
+        let polyline;
+
+        // --- 3. RENDERING & DRAG LOGIC ---
+
+        function renderMapElements() {
+            // 1. Draw initial Polyline (Path)
+            const pathCoordinates = stopsData.map(stop => [stop.lat, stop.lng]);
+            
+            polyline = L.polyline(pathCoordinates, {
+                color: '#eab308', // Tailwind Yellow-500
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 10', 
+                lineJoin: 'round'
+            }).addTo(map);
+
+            // 2. Generate Draggable Pins
+            stopsData.forEach((stop, index) => {
+                const customIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class='stop-marker' id='marker-${stop.id}'>${stop.id}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15], 
+                    popupAnchor: [0, -15]
+                });
+
+                const marker = L.marker([stop.lat, stop.lng], { 
+                    icon: customIcon
+                }).addTo(map);
+                
+                // Add Popup
+                marker.bindPopup(`
+                    <div class="text-center p-1">
+                        <h3 class="font-bold text-lg text-green-700">Stop ${stop.id}: ${stop.name}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${stop.desc}</p>
+                    </div>
+                `);
+
+                // Sidebar highlight on click
+                marker.on('click', () => highlightSidebar(stop.id));
+                markers.push({ id: stop.id, layer: marker });
+            });
+        }
+
+        // --- 4. SIDEBAR LOGIC ---
+
+        function buildSidebar() {
+            const listContainer = document.getElementById('stop-list');
+            listContainer.innerHTML = '';
+
+            stopsData.forEach(stop => {
+                const div = document.createElement('div');
+                div.id = `sidebar-stop-${stop.id}`;
+                div.className = 'p-3 mb-2 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:bg-green-50 transition flex items-center gap-3';
+                div.onclick = () => focusStop(stop.id);
+                
+                div.innerHTML = `
+                    <div class="bg-green-600 text-white font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                        ${stop.id}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-sm">${stop.name}</h3>
+                    </div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        function focusStop(id) {
+            const stop = stopsData.find(s => s.id === id);
+            
+            // Pan map
+            map.flyTo([stop.lat, stop.lng], 19, { duration: 1.0 });
+            
+            // Open popup
+            const markerObj = markers.find(m => m.id === id);
+            if (markerObj) {
+                setTimeout(() => markerObj.layer.openPopup(), 1000); 
+            }
+
+            highlightSidebar(id);
+        }
+
+        function highlightSidebar(id) {
+            document.querySelectorAll('[id^="sidebar-stop-"]').forEach(el => {
+                el.classList.remove('border-green-500', 'bg-green-50');
+                el.classList.add('border-gray-200');
+            });
+            
+            const activeEl = document.getElementById(`sidebar-stop-${id}`);
+            if (activeEl) {
+                activeEl.classList.remove('border-gray-200');
+                activeEl.classList.add('border-green-500', 'bg-green-50');
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // --- 5. INITIALIZE APPLICATION ---
+        buildSidebar();
+        renderMapElements();
+
+        // --- 6. GEOLOCATION & ORIENTATION LOGIC ---
+        let watchId = null;
+        let userMarker = null;
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            // Handle iOS 13+ strict permissions for device orientation
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Non-iOS or older devices
+                if (window.DeviceOrientationAbsoluteEvent) {
+                    window.addEventListener("deviceorientationabsolute", handleOrientation);
+                } else {
+                    window.addEventListener("deviceorientation", handleOrientation);
+                }
+            }
+
+            const btn = document.getElementById('locate-btn');
+
+            if (!watchId) {
+                btn.innerHTML = '🔄'; // Loading state
+                btn.classList.add('animate-pulse');
+
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        if (!userMarker) {
+                            // Create the marker on first successful ping
+                            const icon = L.divIcon({
+                                className: 'custom-user-icon',
+                                html: `
+                                    <div id="flashlight-rotator" class="flashlight-wrapper">
+                                        <div class="flashlight-cone"></div>
+                                    </div>
+                                    <div class="blue-dot"></div>
+                                `,
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10]
+                            });
+                            userMarker = L.marker([lat, lng], {icon: icon, zIndexOffset: 2000}).addTo(map);
+                            map.flyTo([lat, lng], 19, { duration: 1 });
+                            
+                            // Update button to active state
+                            btn.innerHTML = '📍';
+                            btn.classList.remove('animate-pulse');
+                            btn.classList.add('bg-blue-50', 'border-blue-400', 'text-blue-600');
+                        } else {
+                            // Update existing marker position
+                            userMarker.setLatLng([lat, lng]);
+                        }
+                    },
+                    (error) => {
+                        console.error("Error watching position", error);
+                        btn.innerHTML = '🧭';
+                        btn.classList.remove('animate-pulse');
+                        alert("Unable to retrieve your location. Please ensure location services are enabled on your phone.");
+                        watchId = null;
+                    },
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+                );
+            } else {
+                // If already tracking, tapping the button just centers the map back to the user
+                if (userMarker) {
+                    map.flyTo(userMarker.getLatLng(), 19, { duration: 1 });
+                }
+            }
+        }
+
+        function handleOrientation(event) {
+            let heading = null;
+            
+            // Apple devices provide a direct compass heading
+            if (event.webkitCompassHeading) {
+                heading = event.webkitCompassHeading;
+            } 
+            // Absolute orientation for Android devices
+            else if (event.absolute && event.alpha !== null) {
+                heading = 360 - event.alpha;
+            } 
+            // Fallback approximation
+            else if (event.alpha !== null) {
+                heading = 360 - event.alpha;
+            }
+
+            if (heading !== null) {
+                const rotator = document.getElementById('flashlight-rotator');
+                if (rotator) {
+                    rotator.style.transform = `rotate(${heading}deg)`;
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
