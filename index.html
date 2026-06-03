@@ -327,12 +327,13 @@
 
         // --- 2. LEAFLET MAP SETUP ---
         // Setting zoomSnap to 0 allows fractional zooming (e.g. 17.5) to perfectly fit the screen
-        const map = L.map('map', { zoomSnap: 0 }).setView([44.871873, -93.051702], 18);
+        const map = L.map('map', { zoomSnap: 0, maxZoom: 24 }).setView([44.871873, -93.051702], 18);
 
         // Add Satellite Base Layer
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri',
-            maxZoom: 20
+            maxZoom: 24,         // How far they are allowed to zoom in
+            maxNativeZoom: 20    // Tells the map to digitally stretch the tiles once they pass the max satellite resolution
         }).addTo(map);
 
         let markers = [];
@@ -383,7 +384,11 @@
             });
 
             // Automatically zoom and center the map to fit the entire path
-            map.fitBounds(polyline.getBounds(), { padding: [40, 60] });
+            // Delay slightly to ensure mobile browsers have finished rendering the container size
+            setTimeout(() => {
+                map.invalidateSize();
+                map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+            }, 150);
         }
 
         // --- 4. SIDEBAR LOGIC ---
