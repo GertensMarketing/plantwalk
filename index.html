@@ -104,10 +104,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 h-screen w-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
+<body class="bg-gray-100 h-[100dvh] w-screen flex flex-col md:flex-row overflow-hidden text-gray-800">
 
     <!-- Sidebar: Stop List (Hidden on mobile until pin clicked) -->
-    <aside id="sidebar" class="fixed md:relative inset-x-0 bottom-0 z-[1000] md:z-10 w-full md:w-80 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:shadow-lg flex flex-col h-[50vh] md:h-screen transform translate-y-full md:translate-y-0 transition-transform duration-300 rounded-t-2xl md:rounded-none">
+    <aside id="sidebar" class="fixed md:relative inset-x-0 bottom-0 z-[1000] md:z-10 w-full md:w-80 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:shadow-lg flex flex-col h-[50dvh] md:h-[100dvh] transform translate-y-full md:translate-y-0 transition-transform duration-300 rounded-t-2xl md:rounded-none">
         <div class="p-5 bg-green-700 text-white shadow-md relative rounded-t-2xl md:rounded-none">
             <h1 class="text-2xl font-bold">Plant Key</h1>
             <p class="text-sm text-green-100 mt-1">Interactive 26-Stop Guide</p>
@@ -120,16 +120,16 @@
     </aside>
 
     <!-- Main Content: Map & Controls -->
-    <main class="flex-1 relative h-screen w-full">
+    <main class="flex-1 relative h-[100dvh] w-full">
         <div id="map"></div>
 
         <!-- Show Key Button (Mobile Only) -->
-        <button id="show-key-btn" onclick="openSidebar()" class="md:hidden absolute top-4 right-4 z-[400] bg-green-700 text-white px-4 py-2 rounded-full shadow-lg font-bold border-2 border-white hover:bg-green-800 transition">
+        <button id="show-key-btn" onclick="openSidebar()" class="md:hidden absolute top-4 right-4 z-[1000] bg-green-700 text-white px-4 py-2 rounded-full shadow-lg font-bold border-2 border-white hover:bg-green-800 transition">
             📋 Show Key
         </button>
 
         <!-- Locate Me Button -->
-        <button id="locate-btn" onclick="startTracking()" class="absolute bottom-8 right-4 z-[400] bg-white w-14 h-14 rounded-full shadow-lg border border-gray-200 text-2xl hover:bg-gray-50 flex items-center justify-center focus:outline-none transition transform hover:scale-105" title="Show My Location">
+        <button id="locate-btn" onclick="startTracking()" class="absolute bottom-8 right-4 z-[1000] bg-white w-14 h-14 rounded-full shadow-lg border border-gray-200 text-2xl hover:bg-gray-50 flex items-center justify-center focus:outline-none transition transform hover:scale-105" style="margin-bottom: env(safe-area-inset-bottom, 10px);" title="Show My Location">
             🧭
         </button>
     </main>
@@ -325,7 +325,8 @@
         ];
 
         // --- 2. LEAFLET MAP SETUP ---
-        const map = L.map('map').setView(centerCoords, 18);
+        // Setting zoomSnap to 0 allows fractional zooming (e.g. 17.5) to perfectly fit the screen
+        const map = L.map('map', { zoomSnap: 0 }).setView([44.871873, -93.051702], 18);
 
         // Add Satellite Base Layer
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -379,6 +380,9 @@
                 });
                 markers.push({ id: stop.id, layer: marker });
             });
+
+            // Automatically zoom and center the map to fit the entire path
+            map.fitBounds(polyline.getBounds(), { padding: [40, 60] });
         }
 
         // --- 4. SIDEBAR LOGIC ---
