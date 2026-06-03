@@ -8,6 +8,9 @@
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- PapaParse for reading Google Sheets CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
     <!-- Leaflet CSS & JS for the interactive map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -164,190 +167,217 @@
     <script>
         // --- 1. CONFIGURATION & STATE ---
         const centerCoords = [44.872334, -93.051271];
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQE7paglHRw9zBENw0hF07q4DHjsRriyWeZ-g2KXrmTOlDCIGtOTQIprO2DWwoZkty1UK-DmBPysDi1/pub?gid=0&single=true&output=csv';
         
-        // Final exported coordinates for all 26 stops
-        const stopsData = [
+        // Default coordinates & fallback data
+        let stopsData = [
           {
             "id": 1,
             "name": "Allium",
             "lat": 44.871385,
             "lng": -93.052053,
-            "desc": "Perennial"
+            "desc": "Perennial",
+            "link": ""
           },
           {
             "id": 2,
             "name": "Agastache",
             "lat": 44.871414,
             "lng": -93.052104,
-            "desc": "Perennial: Anise Hyssop"
+            "desc": "Perennial: Anise Hyssop",
+            "link": ""
           },
           {
             "id": 3,
             "name": "Baptisia",
             "lat": 44.871499,
             "lng": -93.052055,
-            "desc": "Perennial: False Indigo"
+            "desc": "Perennial: False Indigo",
+            "link": ""
           },
           {
             "id": 4,
             "name": "Gaillardia",
             "lat": 44.871752,
             "lng": -93.051918,
-            "desc": "Perennial: Blanket Flower"
+            "desc": "Perennial: Blanket Flower",
+            "link": ""
           },
           {
             "id": 5,
             "name": "Heuchera",
             "lat": 44.871789,
             "lng": -93.052059,
-            "desc": "Perennial: Coral Bells"
+            "desc": "Perennial: Coral Bells",
+            "link": ""
           },
           {
             "id": 6,
             "name": "Ligularia",
             "lat": 44.871858,
             "lng": -93.052086,
-            "desc": "Perennial: Ragwort"
+            "desc": "Perennial: Ragwort",
+            "link": ""
           },
           {
             "id": 7,
             "name": "Pulmonaria",
             "lat": 44.871858,
             "lng": -93.052015,
-            "desc": "Perennial: Jacobs Ladder"
+            "desc": "Perennial: Jacobs Ladder",
+            "link": ""
           },
           {
             "id": 8,
             "name": "Penstemon",
             "lat": 44.871915,
             "lng": -93.051799,
-            "desc": "Perennial: Beardtongue"
+            "desc": "Perennial: Beardtongue",
+            "link": ""
           },
           {
             "id": 9,
             "name": "Salvia",
             "lat": 44.87211,
             "lng": -93.051842,
-            "desc": "Perennial: Sage"
+            "desc": "Perennial: Sage",
+            "link": ""
           },
           {
             "id": 10,
             "name": "Veronica",
             "lat": 44.872198,
             "lng": -93.051801,
-            "desc": "Perennial: Speedwell"
+            "desc": "Perennial: Speedwell",
+            "link": ""
           },
           {
             "id": 11,
             "name": "Yucca",
             "lat": 44.872281,
             "lng": -93.051804,
-            "desc": "Perennial: Desert Candle"
+            "desc": "Perennial: Desert Candle",
+            "link": ""
           },
           {
             "id": 12,
             "name": "Weigela",
             "lat": 44.872365,
             "lng": -93.051699,
-            "desc": "Shrub"
+            "desc": "Shrub",
+            "link": ""
           },
           {
             "id": 13,
             "name": "Syringa",
             "lat": 44.872274,
             "lng": -93.051699,
-            "desc": "Shrub: Lilac"
+            "desc": "Shrub: Lilac",
+            "link": ""
           },
           {
             "id": 14,
             "name": "Chionanthus",
             "lat": 44.872264,
             "lng": -93.051766,
-            "desc": "Shrub: Fringetree"
+            "desc": "Shrub: Fringetree",
+            "link": ""
           },
           {
             "id": 15,
             "name": "Salix",
             "lat": 44.872043,
             "lng": -93.051576,
-            "desc": "Shrub: Willow"
+            "desc": "Shrub: Willow",
+            "link": ""
           },
           {
             "id": 16,
             "name": "Chamaecyparis",
             "lat": 44.872131,
             "lng": -93.051359,
-            "desc": "Evergreen: Mop Cypress"
+            "desc": "Evergreen: Mop Cypress",
+            "link": ""
           },
           {
             "id": 17,
             "name": "Thuja",
             "lat": 44.872131,
             "lng": -93.051301,
-            "desc": "Evergreen: Primo Arborvitae"
+            "desc": "Evergreen: Primo Arborvitae",
+            "link": ""
           },
           {
             "id": 18,
             "name": "Taxus",
             "lat": 44.872038,
             "lng": -93.051301,
-            "desc": "Evergreen: Upright Yew"
+            "desc": "Evergreen: Upright Yew",
+            "link": ""
           },
           {
             "id": 19,
             "name": "Fothergilla",
             "lat": 44.871911,
             "lng": -93.05158,
-            "desc": "Shrub"
+            "desc": "Shrub",
+            "link": ""
           },
           {
             "id": 20,
             "name": "Cotinus",
             "lat": 44.871859,
             "lng": -93.05158,
-            "desc": "Shrub: Smokebush"
+            "desc": "Shrub: Smokebush",
+            "link": ""
           },
           {
             "id": 21,
             "name": "Hypericum",
             "lat": 44.871904,
             "lng": -93.051498,
-            "desc": "Shrub: St John's Wort"
+            "desc": "Shrub: St John's Wort",
+            "link": ""
           },
           {
             "id": 22,
             "name": "Philadelphus",
             "lat": 44.871908,
             "lng": -93.051372,
-            "desc": "Shrub: Mockorange"
+            "desc": "Shrub: Mockorange",
+            "link": ""
           },
           {
             "id": 23,
             "name": "Clethra",
             "lat": 44.871764,
             "lng": -93.051497,
-            "desc": "Shrub: Summersweet"
+            "desc": "Shrub: Summersweet",
+            "link": ""
           },
           {
             "id": 24,
             "name": "Hydrangea",
             "lat": 44.871647,
             "lng": -93.051593,
-            "desc": "Shrub: Oakleaf Hydrangea"
+            "desc": "Shrub: Oakleaf Hydrangea",
+            "link": ""
           },
           {
             "id": 25,
             "name": "Strawberry",
             "lat": 44.871512,
             "lng": -93.051702,
-            "desc": "Small Fruit"
+            "desc": "Small Fruit",
+            "link": ""
           },
           {
             "id": 26,
             "name": "Rhubarb",
             "lat": 44.871381,
             "lng": -93.051783,
-            "desc": "Small Fruit"
+            "desc": "Small Fruit",
+            "link": ""
           }
         ];
 
@@ -393,18 +423,39 @@
                     icon: customIcon
                 }).addTo(map);
                 
-                // Add Popup
-                marker.bindPopup(`
-                    <div class="text-center p-1">
-                        <h3 class="font-bold text-lg text-[#ba2026]">Stop ${stop.id}: ${stop.name}</h3>
-                        <p class="text-sm text-gray-600 mt-1">${stop.desc}</p>
+                // Determine Next/Prev buttons
+                const prevId = index > 0 ? stopsData[index - 1].id : null;
+                const nextId = index < stopsData.length - 1 ? stopsData[index + 1].id : null;
+
+                let navButtons = `
+                    <div class="flex justify-between border-t border-gray-200 pt-2 mt-3">
+                        <button onclick="focusStop(${prevId})" class="text-[#ba2026] font-bold text-sm px-2 py-1 rounded hover:bg-red-50 transition flex items-center ${!prevId ? 'opacity-30 cursor-not-allowed' : ''}" ${!prevId ? 'disabled' : ''}>
+                            <span class="mr-1">◀</span> Prev
+                        </button>
+                        <button onclick="focusStop(${nextId})" class="text-[#ba2026] font-bold text-sm px-2 py-1 rounded hover:bg-red-50 transition flex items-center ${!nextId ? 'opacity-30 cursor-not-allowed' : ''}" ${!nextId ? 'disabled' : ''}>
+                            Next <span class="ml-1">▶</span>
+                        </button>
                     </div>
-                `);
+                `;
+
+                let learnMoreBtn = '';
+                if (stop.link && stop.link.trim() !== '') {
+                    learnMoreBtn = `<a href="${stop.link}" target="_blank" class="block w-full text-center bg-[#ba2026] !text-white py-2 rounded-lg text-sm font-bold hover:bg-[#9a1b1f] transition mt-3 shadow-sm">LEARN MORE</a>`;
+                }
+
+                // Add Popup with autoPan disabled so our custom camera logic works perfectly
+                marker.bindPopup(`
+                    <div class="text-center p-1 min-w-[200px] md:min-w-[240px]">
+                        <h3 class="font-bold text-lg text-[#ba2026] leading-tight">Stop ${stop.id}: ${stop.name}</h3>
+                        <p class="text-sm text-gray-600 mt-1 font-medium">${stop.desc}</p>
+                        ${learnMoreBtn}
+                        ${navButtons}
+                    </div>
+                `, { autoPan: false });
 
                 // Sidebar highlight and open on click
                 marker.on('click', () => {
-                    highlightSidebar(stop.id);
-                    openSidebar();
+                    focusStop(stop.id);
                 });
                 markers.push({ id: stop.id, layer: marker });
             });
@@ -443,20 +494,29 @@
         }
 
         function focusStop(id) {
+            if (!id) return;
             const stop = stopsData.find(s => s.id === id);
             
-            // Pan map
-            map.flyTo([stop.lat, stop.lng], 19, { duration: 1.0 });
-            
-            // On mobile, close the sidebar so they can see the map pan
-            if (window.innerWidth < 768) {
-                closeSidebar();
-            }
-
-            // Open popup
+            // Open popup first
             const markerObj = markers.find(m => m.id === id);
             if (markerObj) {
-                setTimeout(() => markerObj.layer.openPopup(), 1000); 
+                markerObj.layer.openPopup(); 
+            }
+
+            // Pan map
+            let targetZoom = 19;
+            
+            if (window.innerWidth < 768) {
+                // For Mobile: Push map down by 15% of screen height so pin goes UP above the sidebar
+                const point = map.project([stop.lat, stop.lng], targetZoom);
+                point.y += (window.innerHeight * 0.15); 
+                const offsetLatLng = map.unproject(point, targetZoom);
+                map.flyTo(offsetLatLng, targetZoom, { duration: 0.8 });
+                
+                openSidebar(); // ensure sidebar is open to show the key
+            } else {
+                // For Desktop: Standard center
+                map.flyTo([stop.lat, stop.lng], targetZoom, { duration: 0.8 });
             }
 
             highlightSidebar(id);
@@ -476,19 +536,43 @@
             }
         }
 
-        function openSidebar() {
-            document.getElementById('sidebar').classList.remove('translate-y-full');
-            document.getElementById('show-key-btn').classList.add('hidden');
+        // --- 5. INITIALIZE APPLICATION WITH CSV ---
+        function initApp() {
+            // Attempt to load live data from CSV
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const csvRows = results.data;
+                    
+                    // Merge CSV data with hardcoded coordinates
+                    stopsData = stopsData.map(stop => {
+                        const csvRow = csvRows.find(row => parseInt(row['Pin Number']) === stop.id);
+                        if (csvRow) {
+                            return {
+                                ...stop,
+                                name: csvRow['Name'] || stop.name,
+                                desc: csvRow['Type'] || stop.desc,
+                                link: csvRow['Link'] || stop.link
+                            };
+                        }
+                        return stop;
+                    });
+                    
+                    buildSidebar();
+                    renderMapElements();
+                },
+                error: function(err) {
+                    console.error("Failed to load CSV. Using fallback plant data.", err);
+                    buildSidebar();
+                    renderMapElements();
+                }
+            });
         }
 
-        function closeSidebar() {
-            document.getElementById('sidebar').classList.add('translate-y-full');
-            document.getElementById('show-key-btn').classList.remove('hidden');
-        }
-
-        // --- 5. INITIALIZE APPLICATION ---
-        buildSidebar();
-        renderMapElements();
+        // Start the application
+        initApp();
 
         // --- 6. GEOLOCATION & ORIENTATION LOGIC ---
         let watchId = null;
