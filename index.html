@@ -467,10 +467,13 @@
           }
         ];
 
-        // --- STREAMING_CHUNK:Setting up Leaflet Map... ---
         // --- 2. LEAFLET MAP SETUP ---
         // Setting zoomSnap to 0 allows fractional zooming (e.g. 17.5) to perfectly fit the screen
-        const map = L.map('map', { zoomSnap: 0, maxZoom: 24 }).setView([44.871873, -93.051702], 18);
+        const map = L.map('map', { zoomSnap: 0, maxZoom: 24 });
+
+        // Calculate initial bounds immediately to prevent flashes or wrong zooms while waiting for CSV to load
+        const initialBounds = L.latLngBounds(stopsData.map(stop => [stop.lat, stop.lng]));
+        map.fitBounds(initialBounds, { padding: [30, 30] });
 
         // Add Satellite Base Layer
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -482,7 +485,6 @@
         let markers = [];
         let polyline;
 
-        // --- STREAMING_CHUNK:Rendering map elements... ---
         // --- 3. RENDERING LOGIC ---
 
         function renderMapElements() {
@@ -555,12 +557,12 @@
                 markers.push({ id: stop.id, layer: marker });
             });
 
-            // Automatically zoom and center the map to fit all 26 pins
+            // Double check bounds once everything is loaded to accommodate any mobile browser UI shifts
             setTimeout(() => {
                 map.invalidateSize();
                 const allPinsBounds = L.latLngBounds(stopsData.map(stop => [stop.lat, stop.lng]));
-                map.fitBounds(allPinsBounds, { padding: [50, 50] });
-            }, 250);
+                map.fitBounds(allPinsBounds, { padding: [30, 30] });
+            }, 500);
         }
 
         // --- 4. SIDEBAR LOGIC ---
@@ -600,17 +602,16 @@
             // Pan map
             let targetZoom = 19;
             
+            // Move the map camera slightly UP (negative Y) so the pin sits a bit lower on the screen,
+            // ensuring the popup bubble has plenty of room to be visible without hitting the top.
+            const point = map.project([stop.lat, stop.lng], targetZoom);
+            point.y -= 80; 
+            const offsetLatLng = map.unproject(point, targetZoom);
+            map.flyTo(offsetLatLng, targetZoom, { duration: 0.8 });
+            
+            // On mobile, ensure the sidebar stays closed so it doesn't block the map
             if (window.innerWidth < 768) {
-                // For Mobile: Push map down by 15% of screen height so pin goes UP above the sidebar
-                const point = map.project([stop.lat, stop.lng], targetZoom);
-                point.y += (window.innerHeight * 0.15); 
-                const offsetLatLng = map.unproject(point, targetZoom);
-                map.flyTo(offsetLatLng, targetZoom, { duration: 0.8 });
-                
-                openSidebar(); // ensure sidebar is open to show the key
-            } else {
-                // For Desktop: Standard center
-                map.flyTo([stop.lat, stop.lng], targetZoom, { duration: 0.8 });
+                closeSidebar();
             }
 
             highlightSidebar(id);
