@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gertens Plant Walk</title>
+    <title>Gertens Nursery Plant Walk</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://2026plantwalk.netlify.app/images/gertens-favicon.png" type="image/png">
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -534,14 +537,15 @@
                 }
 
                 // Normal app popup
+                // FIX: Removed Tailwind min-w classes and added minWidth to Leaflet's options object
                 marker.bindPopup(`
-                    <div class="text-center p-1 min-w-[200px] md:min-w-[240px]">
+                    <div class="text-center p-1 w-full">
                         <h3 class="font-bold text-lg text-[#ba2026] leading-tight">Stop ${stop.id}: ${stop.name}</h3>
                         <p class="text-sm text-gray-600 mt-1 font-medium">${stop.desc}</p>
                         ${learnMoreBtn}
                         ${navButtons}
                     </div>
-                `, { autoPan: false });
+                `, { autoPan: false, minWidth: 230 });
 
                 // Sidebar highlight and open on click
                 marker.on('click', () => {
